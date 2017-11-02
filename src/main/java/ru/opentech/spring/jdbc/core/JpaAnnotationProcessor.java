@@ -15,14 +15,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.Date;
 
 /**
  * Обработчик запросов SQL с маппингом данных через аннотации JPA
@@ -218,10 +214,15 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
                 log.debug( "Конвертирую значение результата запроса в Double колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Double d = rs.getDouble( index );
                 return !rs.wasNull() ? d : null;
+            case Types.TIME:
+            case Types.TIME_WITH_TIMEZONE:
+                log.debug( "Конвертирую значение результата запроса в LocalTime колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                Time time = rs.getTime( index );
+                return !rs.wasNull() ? time.toLocalTime() : null;
             case Types.TIMESTAMP:
             case Types.TIMESTAMP_WITH_TIMEZONE:
                 log.debug( "Конвертирую значение результата запроса в Date колонки {}", rs.getMetaData().getColumnLabel( index ) );
-                java.util.Date date = rs.getTimestamp( index );
+                Date date = rs.getTimestamp( index );
                 return !rs.wasNull() ? date : null;
             default:
                 throw new SQLException( "Не удалось сконвертировать колонку результата запроса" );
