@@ -87,18 +87,18 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
      */
     private void processFields( T instance, ResultSet rs ) throws IllegalAccessException, SQLException {
         for( Field field : this.columnFields ) {
-            log.debug( "Маппинг для поля {}", field.getName() );
+            log.trace( "Маппинг для поля {}", field.getName() );
             Integer index = sqlColumnsMap.get( field.getAnnotation( Column.class ).name() );
             // для реализации Deferred полей
             if( index == null ) {
-                log.debug( "Поле {} не найдено в результате запроса СУБД. Пропускаю.." );
+                log.trace( "Поле {} не найдено в результате запроса СУБД. Пропускаю.." );
                 continue;
             }
             Object value = convertSqlValue( index, rs );
             if( value == null && field.getAnnotation( NotNull.class ) != null ) {
                 throw new SQLException( "Запрос вернул null значение для NotNull поля " + field.getName() );
             }
-            log.debug( "Для поля {} класса {} получено значение {}", field.getName(), instance.getClass().getName(), value );
+            log.trace( "Для поля {} класса {} получено значение {}", field.getName(), instance.getClass().getName(), value );
             field.setAccessible( true );
             field.set( instance, value );
         }
@@ -114,17 +114,17 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
      */
     private void processMethods( T instance, ResultSet rs ) throws IllegalAccessException, InvocationTargetException, SQLException {
         for( Method method : this.columnMethods ) {
-            log.debug( "Маппинг для метода {}( {} )", method.getName(), method.getParameters() );
+            log.trace( "Маппинг для метода {}( {} )", method.getName(), method.getParameters() );
             Integer index = sqlColumnsMap.get( method.getAnnotation( Column.class ).name() );
             if( index == null ) {
-                log.debug( "Поле {} не найдено в результате запроса СУБД. Пропускаю.." );
+                log.trace( "Поле {} не найдено в результате запроса СУБД. Пропускаю.." );
                 continue;
             }
             Object value = convertSqlValue( index, rs );
             if( value == null && method.getParameters()[0].getAnnotation( NotNull.class ) != null ) {
                 throw new SQLException( "Запрос вернул null значение для NotNull входного параметра метода " + method.getName() );
             }
-            log.debug( "Для метода {} класса {} получено значение {}", method.getName(), instance.getClass().getName(), value );
+            log.trace( "Для метода {} класса {} получено значение {}", method.getName(), instance.getClass().getName(), value );
             method.setAccessible( true );
             method.invoke( instance, value );
         }
@@ -158,7 +158,7 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
                 }
             }
         }
-        log.debug( "{}: {}", this.getClass(), this.toString() );
+        log.trace( "{}: {}", this.getClass(), this.toString() );
     }
 
     /**
@@ -183,45 +183,45 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
     private Object convertSqlValue( int index, ResultSet rs ) throws SQLException {
         switch( rs.getMetaData().getColumnType( index ) ) {
             case Types.BOOLEAN:
-                log.debug( "Конвертирую значение результата запроса в Boolean колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в Boolean колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 return rs.getBoolean( index );
             case Types.SMALLINT:
-                log.debug( "Конвертирую значение результата запроса в Short колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в Short колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Short sh = rs.getShort( index );
                 return !rs.wasNull() ? sh : null;
             case Types.INTEGER:
-                log.debug( "Конвертирую значение результата запроса в Integer колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в Integer колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Integer integer = rs.getInt( index );
                 return !rs.wasNull() ? integer : null;
             case Types.BIGINT:
-                log.debug( "Конвертирую значение результата запроса в Long колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в Long колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Long l = rs.getLong( index );
                 return !rs.wasNull() ? l : null;
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
             case Types.LONGNVARCHAR:
-                log.debug( "Конвертирую значение результата запроса в String колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в String колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 String string = rs.getString( index );
                 return !rs.wasNull() ? string : null;
             case Types.FLOAT:
             case Types.REAL:
-                log.debug( "Конвертирую значение результата запроса в Float колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в Float колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Float f = rs.getFloat( index );
                 return !rs.wasNull() ? f : null;
             case Types.NUMERIC:
             case Types.DECIMAL:
             case Types.DOUBLE:
-                log.debug( "Конвертирую значение результата запроса в Double колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в Double колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Double d = rs.getDouble( index );
                 return !rs.wasNull() ? d : null;
             case Types.TIME:
             case Types.TIME_WITH_TIMEZONE:
-                log.debug( "Конвертирую значение результата запроса в LocalTime колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в LocalTime колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Time time = rs.getTime( index );
                 return !rs.wasNull() ? time.toLocalTime() : null;
             case Types.TIMESTAMP:
             case Types.TIMESTAMP_WITH_TIMEZONE:
-                log.debug( "Конвертирую значение результата запроса в Date колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                log.trace( "Конвертирую значение результата запроса в Date колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Date date = rs.getTimestamp( index );
                 return !rs.wasNull() ? date : null;
             default:
