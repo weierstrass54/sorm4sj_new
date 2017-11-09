@@ -174,10 +174,14 @@ abstract public class Repository {
      * @see #prepare(Object...)
      */
     private MapSqlParameterSource prepare( MapSqlParameterSource params ) {
-        params.getValues().replaceAll(
-            ( key, value ) -> value instanceof Iterable ? toArray( (Iterable)value ) : value
+        MapSqlParameterSource preparedParams = new MapSqlParameterSource();
+        params.getValues().forEach(
+            ( key, value ) -> {
+                Object preparedValue = value instanceof Iterable ? toArray( (Iterable)value ) : value;
+                preparedParams.addValue( key, preparedValue );
+            }
         );
-        return params;
+        return preparedParams;
     }
 
     /**
