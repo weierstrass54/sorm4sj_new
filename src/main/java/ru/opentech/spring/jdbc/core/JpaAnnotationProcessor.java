@@ -221,6 +221,7 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
                 return !rs.wasNull() ? time.toLocalTime() : null;
             case Types.TIMESTAMP:
             case Types.TIMESTAMP_WITH_TIMEZONE:
+            case Types.DATE:
                 log.trace( "Конвертирую значение результата запроса в Date колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Date date = rs.getTimestamp( index );
                 return !rs.wasNull() ? date : null;
