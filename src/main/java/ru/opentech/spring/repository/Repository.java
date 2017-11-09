@@ -9,6 +9,7 @@ import ru.opentech.spring.jdbc.core.SimpleObjectExtractor;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
 abstract public class Repository {
 
@@ -173,11 +174,9 @@ abstract public class Repository {
      * @see #prepare(Object...)
      */
     private MapSqlParameterSource prepare( MapSqlParameterSource params ) {
-        params.getValues().values().forEach( value -> {
-            if( value instanceof Iterable ) {
-                value = toArray( (Iterable)value );
-            }
-        } );
+        params.getValues().replaceAll(
+            ( key, value ) -> value instanceof Iterable ? toArray( (Iterable)value ) : value
+        );
         return params;
     }
 
@@ -201,14 +200,8 @@ abstract public class Repository {
      * @param iterable исходная коллекция
      * @return массив объектов
      */
-    private static Object[] toArray( Iterable iterable ) {
-        int size = (int)iterable.spliterator().getExactSizeIfKnown();
-        Object[] array = new Object[size];
-        int index = 0;
-        for( Iterator it = iterable.iterator(); it.hasNext(); ++index ) {
-            array[index] = it.next();
-        }
-        return array;
+    private static Object[] toArray( Iterable<?> iterable ) {
+        return StreamSupport.stream( iterable.spliterator(), false ).toArray();
     }
 
 }
