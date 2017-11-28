@@ -19,6 +19,7 @@ import java.sql.*;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 /**
  * Обработчик запросов SQL с маппингом данных через аннотации JPA
@@ -87,7 +88,14 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
      */
     private void processFields( T instance, ResultSet rs ) throws IllegalAccessException, SQLException {
         for( Field field : this.columnFields ) {
-            log.trace( "Маппинг для поля {}", field.getName() );
+            log.trace( "Маппинг для поля {} класса {}", field.getName(), instance.getClass().getName() );
+            // массивы примитивов не маппим, так как в массивах могут быть NULL
+            if( field.getType().isArray() && !field.getType().getName().startsWith( "[L" ) ) {
+                throw new SQLException(
+                    "Поле " + field.getName() + " класса " + instance.getClass().getName() + " является массивом примитивов. " +
+                    "Подсказка: измените тип поля " + field.getName() + " класса " + instance.getClass().getName() + " на массив объектов или List"
+                );
+            }
             Integer index = sqlColumnsMap.get( field.getAnnotation( Column.class ).name() );
             // для реализации Deferred полей
             if( index == null ) {
@@ -100,6 +108,9 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
             }
             log.trace( "Для поля {} класса {} получено значение {}", field.getName(), instance.getClass().getName(), value );
             field.setAccessible( true );
+            if( Collection.class.isAssignableFrom( field.getType() ) && value != null ) {
+                value = Arrays.stream( (Object[])value ).collect( Collectors.toList() );
+            }
             field.set( instance, value );
         }
     }
@@ -225,8 +236,16 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
                 log.trace( "Конвертирую значение результата запроса в Date колонки {}", rs.getMetaData().getColumnLabel( index ) );
                 Date date = rs.getTimestamp( index );
                 return !rs.wasNull() ? date : null;
+            case Types.ARRAY:
+                log.trace( "Конвертирую значение результата запроса в Array колонки {}", rs.getMetaData().getColumnLabel( index ) );
+                Array array = rs.getArray( index );
+                return !rs.wasNull() ? (Object[])array.getArray() : null;
             default:
-                throw new SQLException( "Не удалось сконвертировать колонку результата запроса" );
+                final String exMessage = String.format(
+                    "Не удалось сконвертировать колонку %s результата запроса. Преобразование для типа %s не задано.",
+                    rs.getMetaData().getColumnLabel( index ), rs.getMetaData().getColumnTypeName( index )
+                );
+                throw new SQLException( exMessage );
         }
     }
 

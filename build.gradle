@@ -1,7 +1,8 @@
 group 'ru.opentech'
-version '0.1.5'
+version '0.2.0'
 
 apply plugin: 'java'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
 
@@ -15,4 +16,24 @@ dependencies {
             "javax.validation:validation-api:2.0.0.Final"
     compileOnly "org.springframework:spring-jdbc:5.0.0.RELEASE"
     testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            // default credentials for a nexus repository manager
+            credentials {
+                username 'admin'
+                password 'admin123'
+            }
+            // url to the releases maven repository
+            url "http://maven.opentech.local/nexus/content/repositories/opentech/"
+        }
+    }
 }
