@@ -12,11 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SimpleObjectExtractor implements ResultSetExtractor<Iterable<Map<String, Object>>> {
+public class SimpleObjectExtractor implements ResultSetExtractor<List<Map<String, Object>>> {
 
     @Nullable
     @Override
-    public Iterable<Map<String, Object>> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+    public List<Map<String, Object>> extractData( ResultSet rs ) throws SQLException, DataAccessException {
         ResultSetMetaData resultSetMetaData = rs.getMetaData();
         List<Map<String, Object>> list = new ArrayList<>();
         while( rs.next() ) {

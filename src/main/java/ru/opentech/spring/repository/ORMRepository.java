@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import ru.opentech.spring.jdbc.core.JpaAnnotationProcessor;
 
+import java.util.List;
+
 abstract public class ORMRepository<T> extends Repository {
 
     protected ORMRepository( NamedParameterJdbcTemplate jdbcTemplate ) {
@@ -19,7 +21,7 @@ abstract public class ORMRepository<T> extends Repository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected Iterable<T> loadList( Class<T> clazz, String query, Object... params ) {
+    protected List<T> loadList( Class<T> clazz, String query, Object... params ) {
         try {
             return super.loadList( getResultSetExtractor( clazz ), query, params );
         }
@@ -35,7 +37,7 @@ abstract public class ORMRepository<T> extends Repository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected Iterable<T> loadList( Class<T> clazz, String query, MapSqlParameterSource params ) {
+    protected List<T> loadList( Class<T> clazz, String query, MapSqlParameterSource params ) {
         try {
             return super.loadList( getResultSetExtractor( clazz ), query, params );
         }
@@ -66,7 +68,7 @@ abstract public class ORMRepository<T> extends Repository {
         return head( loadList( clazz, query, params ) );
     }
 
-    private ResultSetExtractor<Iterable<T>> getResultSetExtractor( Class<T> clazz ) throws NoSuchMethodException {
+    private ResultSetExtractor<List<T>> getResultSetExtractor( Class<T> clazz ) throws NoSuchMethodException {
         return new JpaAnnotationProcessor<>( clazz );
     }
 

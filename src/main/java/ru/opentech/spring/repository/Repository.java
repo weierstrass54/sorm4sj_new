@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import ru.opentech.spring.jdbc.core.SimpleObjectExtractor;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
@@ -72,7 +73,7 @@ abstract public class Repository {
      * @param <T> тип данных колонки
      * @return колонка субд в виде списка объектов класса колонки
      */
-    protected <T> Iterable<T> loadColumn( Class<T> clazz, String query, Object... params ) {
+    protected <T> List<T> loadColumn( Class<T> clazz, String query, Object... params ) {
         return jdbcTemplate.getJdbcOperations().queryForList( query, clazz, prepare( params ) );
     }
 
@@ -84,7 +85,7 @@ abstract public class Repository {
      * @param <T> тип данных колонки
      * @return колонка субд в виде списка объектов класса колонки
      */
-    protected <T> Iterable<T> loadColumn( Class<T> clazz, String query, MapSqlParameterSource params ) {
+    protected <T> List<T> loadColumn( Class<T> clazz, String query, MapSqlParameterSource params ) {
         return jdbcTemplate.queryForList( query, prepare( params ), clazz );
     }
 
@@ -94,7 +95,7 @@ abstract public class Repository {
      * @param params параметры запроса
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
-    protected Iterable<Map<String, Object>> loadObjects( String query, Object... params ) {
+    protected List<Map<String, Object>> loadObjects( String query, Object... params ) {
         return loadList( new SimpleObjectExtractor(), query, params );
     }
 
@@ -104,7 +105,7 @@ abstract public class Repository {
      * @param params параметры запроса
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
-    protected Iterable<Map<String, Object>> loadObjects( String query, MapSqlParameterSource params ) {
+    protected List<Map<String, Object>> loadObjects( String query, MapSqlParameterSource params ) {
         return loadList( new SimpleObjectExtractor(), query, params );
     }
 
@@ -116,7 +117,7 @@ abstract public class Repository {
      * @param <T> тип данных, к которому нужно преобразовать строку результата запроса
      * @return список преобразованных данных
      */
-    protected <T> Iterable<T> loadList( ResultSetExtractor<Iterable<T>> extractor, String query, Object... params ) {
+    protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, Object... params ) {
         return jdbcTemplate.getJdbcOperations().query( query, prepare( params ), extractor );
     }
 
@@ -128,7 +129,7 @@ abstract public class Repository {
      * @param <T> тип данных, к которому нужно преобразовать строку результата запроса
      * @return список преобразованных данных
      */
-    protected <T> Iterable<T> loadList( ResultSetExtractor<Iterable<T>> extractor, String query, MapSqlParameterSource params ) {
+    protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, MapSqlParameterSource params ) {
         return jdbcTemplate.query( query, prepare( params ), extractor );
     }
 

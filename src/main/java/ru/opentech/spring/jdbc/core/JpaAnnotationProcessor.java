@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * Обработчик запросов SQL с маппингом данных через аннотации JPA
  * @param <T> тип объекта, к которому нужно привести строку результата SQL запроса
  */
-public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>> {
+public class JpaAnnotationProcessor<T> implements ResultSetExtractor<List<T>> {
 
     private static final Logger log = LoggerFactory.getLogger( JpaAnnotationProcessor.class );
 
@@ -50,7 +50,7 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<Iterable<T>
 
     @Nullable
     @Override
-    public Iterable<T> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+    public List<T> extractData( ResultSet rs ) throws SQLException, DataAccessException {
         List<T> result = new ArrayList<>();
         try {
             buildSqlColumnsMap( rs.getMetaData() );
