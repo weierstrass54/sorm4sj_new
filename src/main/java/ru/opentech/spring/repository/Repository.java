@@ -5,14 +5,11 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import ru.opentech.spring.jdbc.core.SimpleObjectExtractor;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
-abstract public class Repository {
+public abstract class Repository {
 
     protected final NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -74,7 +71,7 @@ abstract public class Repository {
      * @return колонка субд в виде списка объектов класса колонки
      */
     protected <T> List<T> loadColumn( Class<T> clazz, String query, Object... params ) {
-        return jdbcTemplate.getJdbcOperations().queryForList( query, clazz, prepare( params ) );
+        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( query, clazz, prepare( params ) ) );
     }
 
     /**
@@ -86,7 +83,7 @@ abstract public class Repository {
      * @return колонка субд в виде списка объектов класса колонки
      */
     protected <T> List<T> loadColumn( Class<T> clazz, String query, MapSqlParameterSource params ) {
-        return jdbcTemplate.queryForList( query, prepare( params ), clazz );
+        return Collections.unmodifiableList( jdbcTemplate.queryForList( query, prepare( params ), clazz ) );
     }
 
     /**
@@ -96,7 +93,7 @@ abstract public class Repository {
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
     protected List<Map<String, Object>> loadObjects( String query, Object... params ) {
-        return loadList( new SimpleObjectExtractor(), query, params );
+        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( query, params ) );
     }
 
     /**
@@ -106,7 +103,7 @@ abstract public class Repository {
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
     protected List<Map<String, Object>> loadObjects( String query, MapSqlParameterSource params ) {
-        return loadList( new SimpleObjectExtractor(), query, params );
+        return Collections.unmodifiableList( jdbcTemplate.queryForList( query, params ) );
     }
 
     /**
@@ -118,7 +115,8 @@ abstract public class Repository {
      * @return список преобразованных данных
      */
     protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, Object... params ) {
-        return jdbcTemplate.getJdbcOperations().query( query, prepare( params ), extractor );
+        List<T> list = jdbcTemplate.getJdbcOperations().query( query, prepare( params ), extractor );
+        return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
     }
 
     /**
@@ -130,7 +128,8 @@ abstract public class Repository {
      * @return список преобразованных данных
      */
     protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, MapSqlParameterSource params ) {
-        return jdbcTemplate.query( query, prepare( params ), extractor );
+        List<T> list = jdbcTemplate.query( query, prepare( params ), extractor );
+        return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
     }
 
     /**

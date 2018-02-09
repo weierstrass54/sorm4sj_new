@@ -13,10 +13,7 @@ import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.*;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.Date;
 import java.util.stream.Collectors;
@@ -34,8 +31,6 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<List<T>> {
 
     // список полей класса, к которым нужно привязать значения результатов запроса
     private final List<Field> columnFields;
-    // список методов класса, которые нужно вызвать со значением результата запроса в виде входного параметра
-    private final List<Method> columnMethods;
 
     // карта имен колонок и их индексов
     private Map<String, Integer> sqlColumnsMap;
@@ -43,7 +38,6 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<List<T>> {
     public JpaAnnotationProcessor( Class<T> clazz ) throws NoSuchMethodException {
         constructor = clazz.getDeclaredConstructor();
         this.columnFields = new ArrayList<>();
-        this.columnMethods = new ArrayList<>();
         this.sqlColumnsMap = new HashMap<>();
         gatherMappedColumns( clazz );
     }
@@ -57,13 +51,12 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<List<T>> {
             while( rs.next() ) {
                 T instance = constructor.newInstance();
                 processFields( instance, rs );
-                processMethods( instance, rs );
                 result.add( instance );
             }
         }
-        catch( Throwable t ) {
-            log.error( "Ошибка получения данных из СУБД: {}", t.getMessage(), t );
-            throw new SQLException( t );
+        catch( Exception e ) {
+            log.error( "Ошибка получения данных из СУБД: {}", e.getMessage(), e );
+            throw new SQLException( e );
         }
         return result;
     }
@@ -73,8 +66,6 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<List<T>> {
         StringBuilder sb = new StringBuilder( constructor.getDeclaringClass().getName() )
             .append( ": [" + "\n\tfields: [" );
         columnFields.forEach( f -> sb.append( "\n\t\t" + f.getName() ) );
-        sb.append( "\n\t],\n\tmethods: [" );
-        columnMethods.forEach( m -> sb.append( "\n\t\t" + m.getName() ) );
         sb.append( "\n\t]\n]" );
         return sb.toString();
     }
@@ -116,32 +107,6 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<List<T>> {
     }
 
     /**
-     * Обработка методов результирующего объекта
-     * @param instance экземпляр результирующего объекта
-     * @param rs даныне из СУБД
-     * @throws IllegalAccessException в случае, если указанный метод недоступен для вызова
-     * @throws InvocationTargetException в случае, если указанного метода не существует
-     * @throws SQLException в иных случаях
-     */
-    private void processMethods( T instance, ResultSet rs ) throws IllegalAccessException, InvocationTargetException, SQLException {
-        for( Method method : this.columnMethods ) {
-            log.trace( "Маппинг для метода {}( {} )", method.getName(), method.getParameters() );
-            Integer index = sqlColumnsMap.get( method.getAnnotation( Column.class ).name() );
-            if( index == null ) {
-                log.trace( "Поле {} не найдено в результате запроса СУБД. Пропускаю.." );
-                continue;
-            }
-            Object value = convertSqlValue( index, rs );
-            if( value == null && method.getParameters()[0].getAnnotation( NotNull.class ) != null ) {
-                throw new SQLException( "Запрос вернул null значение для NotNull входного параметра метода " + method.getName() );
-            }
-            log.trace( "Для метода {} класса {} получено значение {}", method.getName(), instance.getClass().getName(), value );
-            method.setAccessible( true );
-            method.invoke( instance, value );
-        }
-    }
-
-    /**
      * Получение и хранение списка колонок и методов, к которым нужно привязать данные из результатов запроса СУБД
      * @param clazz класс, к экземплярам которого нужно привязывать данные
      */
@@ -155,21 +120,9 @@ public class JpaAnnotationProcessor<T> implements ResultSetExtractor<List<T>> {
                     "Родитель " + clz.getName() + " результирующего класса " + clazz.getName() + " не помечен аннотацией " + MappedSuperclass.class.getName()
                 );
             }
-            for( Field field : clz.getDeclaredFields() ) {
-                if( field.getAnnotation( Column.class ) != null ) {
-                    this.columnFields.add( field );
-                }
-            }
-            for( Method method : clz.getDeclaredMethods() ) {
-                if( method.getAnnotation( Column.class ) != null ) {
-                    if( method.getParameterCount() != 1 ) {
-                        throw new EntityNotFoundException( "Метод " + method.getName() + " класса " + clz.getName() + " должен принимать на вход один параметр." );
-                    }
-                    this.columnMethods.add( method );
-                }
-            }
+            Arrays.stream( clz.getDeclaredFields() ).filter( f -> f.getAnnotation( Column.class ) != null ).forEach( columnFields::add );
         }
-        log.trace( "{}: {}", this.getClass(), this.toString() );
+        log.trace( "{}: {}", this.getClass(), this );
     }
 
     /**

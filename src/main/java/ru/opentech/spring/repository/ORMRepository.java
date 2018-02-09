@@ -8,7 +8,7 @@ import ru.opentech.spring.jdbc.core.JpaAnnotationProcessor;
 
 import java.util.List;
 
-abstract public class ORMRepository<T> extends Repository {
+public abstract class ORMRepository<E> extends Repository {
 
     protected ORMRepository( NamedParameterJdbcTemplate jdbcTemplate ) {
         super( jdbcTemplate );
@@ -21,7 +21,7 @@ abstract public class ORMRepository<T> extends Repository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected List<T> loadList( Class<T> clazz, String query, Object... params ) {
+    protected <T extends E> List<T> loadList( Class<T> clazz, String query, Object... params ) {
         try {
             return super.loadList( getResultSetExtractor( clazz ), query, params );
         }
@@ -37,7 +37,7 @@ abstract public class ORMRepository<T> extends Repository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected List<T> loadList( Class<T> clazz, String query, MapSqlParameterSource params ) {
+    protected <T extends E> List<T> loadList( Class<T> clazz, String query, MapSqlParameterSource params ) {
         try {
             return super.loadList( getResultSetExtractor( clazz ), query, params );
         }
@@ -53,7 +53,7 @@ abstract public class ORMRepository<T> extends Repository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected T loadObject( Class<T> clazz, String query, Object... params ) {
+    protected <T extends E> T loadObject( Class<T> clazz, String query, Object... params ) {
         return head( loadList( clazz, query, params ) );
     }
 
@@ -64,11 +64,11 @@ abstract public class ORMRepository<T> extends Repository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected T loadObject( Class<T> clazz, String query, MapSqlParameterSource params ) {
+    protected <T extends E> T loadObject( Class<T> clazz, String query, MapSqlParameterSource params ) {
         return head( loadList( clazz, query, params ) );
     }
 
-    private ResultSetExtractor<List<T>> getResultSetExtractor( Class<T> clazz ) throws NoSuchMethodException {
+    private <T extends E> ResultSetExtractor<List<T>> getResultSetExtractor( Class<T> clazz ) throws NoSuchMethodException {
         return new JpaAnnotationProcessor<>( clazz );
     }
 
