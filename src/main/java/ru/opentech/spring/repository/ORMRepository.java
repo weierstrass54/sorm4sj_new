@@ -14,6 +14,10 @@ public abstract class ORMRepository<E> extends Repository {
         super( jdbcTemplate );
     }
 
+    protected ORMRepository( NamedParameterJdbcTemplate jdbcTemplate, boolean attachCallerSrc ) {
+        super( jdbcTemplate, attachCallerSrc );
+    }
+
     /**
      * Выполенение запроса с безымянными параметрами к СУБД для получения списка кортежей с маппингом результата через JPA
      * @param clazz класс для маппинга

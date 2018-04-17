@@ -1,5 +1,5 @@
 group 'ru.opentech'
-version '0.4.0-beta'
+version '0.4.1-beta'
 
 apply plugin: 'java'
 apply plugin: 'maven-publish'
@@ -7,7 +7,9 @@ apply plugin: 'maven-publish'
 sourceCompatibility = 1.8
 
 repositories {
-    mavenCentral()
+    maven {
+        url( 'http://nexus.opentech.local/repository/maven-public/' )
+    }
 }
 
 dependencies {
@@ -15,7 +17,10 @@ dependencies {
             "org.eclipse.persistence:javax.persistence:2.2.0",
             "javax.validation:validation-api:2.0.0.Final"
     compileOnly "org.springframework:spring-jdbc:5.0.0.RELEASE"
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile "junit:junit:4.12",
+                "org.springframework:spring-jdbc:5.0.0.RELEASE",
+                "org.springframework:spring-context:5.0.0.RELEASE",
+                "org.springframework:spring-test:5.0.0.RELEASE"
 }
 
 publishing {
@@ -27,13 +32,11 @@ publishing {
 
     repositories {
         maven {
-            // default credentials for a nexus repository manager
             credentials {
-                username 'admin'
-                password 'admin123'
+                username "$mavenUser"
+                password "$mavenPassword"
             }
-            // url to the releases maven repository
-            url "http://maven.opentech.local/nexus/content/repositories/opentech/"
+            url( 'http://nexus.opentech.local/repository/maven-releases/' )
         }
     }
 }

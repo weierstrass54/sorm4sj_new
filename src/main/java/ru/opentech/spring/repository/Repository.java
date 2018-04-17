@@ -1,6 +1,5 @@
 package ru.opentech.spring.repository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -11,11 +10,16 @@ import java.util.stream.StreamSupport;
 
 public abstract class Repository {
 
+    private final boolean attachCallerSrc;
     protected final NamedParameterJdbcTemplate jdbcTemplate;
 
-    @Autowired
     protected Repository( NamedParameterJdbcTemplate jdbcTemplate ) {
+        this( jdbcTemplate, false );
+    }
+
+    protected Repository( NamedParameterJdbcTemplate jdbcTemplate, boolean attachCallerSrc ) {
         this.jdbcTemplate = jdbcTemplate;
+        this.attachCallerSrc = attachCallerSrc;
     }
 
     /**
@@ -27,7 +31,7 @@ public abstract class Repository {
      * @return результат запроса в виде скаляра
      */
     protected <T> T loadScalar( Class<T> clazz, String query, Object... params ) {
-        return jdbcTemplate.getJdbcOperations().queryForObject( query, clazz, prepare( params ) );
+        return jdbcTemplate.getJdbcOperations().queryForObject( prepare( query ), clazz, prepare( params ) );
     }
 
     /**
@@ -39,7 +43,7 @@ public abstract class Repository {
      * @return результат запроса в виде скаляра
      */
     protected <T> T loadScalar( Class<T> clazz, String query, MapSqlParameterSource params ) {
-        return jdbcTemplate.queryForObject( query, prepare( params ), clazz );
+        return jdbcTemplate.queryForObject( prepare( query ), prepare( params ), clazz );
     }
 
     /**
@@ -49,7 +53,7 @@ public abstract class Repository {
      * @return Map, ключом которого является название колонки результата запроса, а значением - содержимое этой колонки
      */
     protected Map<String, Object> loadObject( String query, Object... params ) {
-        return head( loadObjects( query, params ) );
+        return head( loadObjects( prepare( query ), params ) );
     }
 
     /**
@@ -59,7 +63,7 @@ public abstract class Repository {
      * @return Map, ключом которого является название колонки результата запроса, а значением - содержимое этой колонки
      */
     protected Map<String, Object> loadObject( String query, MapSqlParameterSource params ) {
-        return head( loadObjects( query, params ) );
+        return head( loadObjects( prepare( query ), params ) );
     }
 
     /**
@@ -71,7 +75,7 @@ public abstract class Repository {
      * @return колонка субд в виде списка объектов класса колонки
      */
     protected <T> List<T> loadColumn( Class<T> clazz, String query, Object... params ) {
-        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( query, clazz, prepare( params ) ) );
+        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( prepare( query ), clazz, prepare( params ) ) );
     }
 
     /**
@@ -83,7 +87,7 @@ public abstract class Repository {
      * @return колонка субд в виде списка объектов класса колонки
      */
     protected <T> List<T> loadColumn( Class<T> clazz, String query, MapSqlParameterSource params ) {
-        return Collections.unmodifiableList( jdbcTemplate.queryForList( query, prepare( params ), clazz ) );
+        return Collections.unmodifiableList( jdbcTemplate.queryForList( prepare( query ), prepare( params ), clazz ) );
     }
 
     /**
@@ -93,7 +97,7 @@ public abstract class Repository {
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
     protected List<Map<String, Object>> loadObjects( String query, Object... params ) {
-        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( query, params ) );
+        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( prepare( query ), params ) );
     }
 
     /**
@@ -103,7 +107,7 @@ public abstract class Repository {
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
     protected List<Map<String, Object>> loadObjects( String query, MapSqlParameterSource params ) {
-        return Collections.unmodifiableList( jdbcTemplate.queryForList( query, params ) );
+        return Collections.unmodifiableList( jdbcTemplate.queryForList( prepare( query ), params ) );
     }
 
     /**
@@ -115,7 +119,7 @@ public abstract class Repository {
      * @return список преобразованных данных
      */
     protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, Object... params ) {
-        List<T> list = jdbcTemplate.getJdbcOperations().query( query, prepare( params ), extractor );
+        List<T> list = jdbcTemplate.getJdbcOperations().query( prepare( query ), prepare( params ), extractor );
         return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
     }
 
@@ -128,7 +132,7 @@ public abstract class Repository {
      * @return список преобразованных данных
      */
     protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, MapSqlParameterSource params ) {
-        List<T> list = jdbcTemplate.query( query, prepare( params ), extractor );
+        List<T> list = jdbcTemplate.query( prepare( query ), prepare( params ), extractor );
         return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
     }
 
@@ -139,7 +143,7 @@ public abstract class Repository {
      * @return кол-во измененных строк
      */
     protected int execute( String query, Object... params ) {
-        return jdbcTemplate.getJdbcOperations().update( query, prepare( params ) );
+        return jdbcTemplate.getJdbcOperations().update( prepare( query ), prepare( params ) );
     }
 
     /**
@@ -149,7 +153,7 @@ public abstract class Repository {
      * @return кол-во измененных строк
      */
     protected int execute( String query, MapSqlParameterSource params ) {
-        return jdbcTemplate.update( query, prepare( params ) );
+        return jdbcTemplate.update( prepare( query ), prepare( params ) );
     }
 
     /**
@@ -165,6 +169,28 @@ public abstract class Repository {
             }
         }
         return params;
+    }
+
+    /**
+     * Подготовить запрос к выполнению.
+     * Использует настройку sorm4sj.attach-caller-src для того, что к началу запроса добавлять имя класса, метода
+     * и номер строки, откуда был сделан вызов SQL-запроса.
+     * @param query SQL-запрос
+     * @return запрос с дополнительной информацией
+     */
+    private String prepare( final String query ) {
+        if( attachCallerSrc ) {
+            // todo: add application name
+            String callerSrc = "";
+            StackTraceElement source = Arrays.stream( new Throwable().getStackTrace() )
+                .filter( trace -> trace.getClassName().equals( this.getClass().getName() ) )
+                .findFirst().orElse( null );
+            if( source != null ) {
+                callerSrc = "/* " + source.getFileName() + ':' + source.getLineNumber() + " /*\n";
+            }
+            return callerSrc + query;
+        }
+        return query;
     }
 
     /**
