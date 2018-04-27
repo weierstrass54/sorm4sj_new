@@ -1,9 +1,11 @@
 package ru.opentech.spring.repository;
 
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import ru.opentech.spring.jdbc.core.JpaAnnotationProcessor;
 
 import java.util.*;
 import java.util.stream.StreamSupport;
@@ -112,28 +114,38 @@ public abstract class Repository {
 
     /**
      * Выполенение запроса с безымянными параметрами к СУБД с извлечением из результат всех строк с преобразованием по заданному правилу
-     * @param extractor правило преобразования результата запроса
+     * @param clazz класс для маппинга
      * @param query SQL-запрос
      * @param params параметры запроса
      * @param <T> тип данных, к которому нужно преобразовать строку результата запроса
      * @return список преобразованных данных
      */
-    protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, Object... params ) {
-        List<T> list = jdbcTemplate.getJdbcOperations().query( prepare( query ), prepare( params ), extractor );
-        return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
+    protected <T> List<T> loadListOf( Class<T> clazz, String query, Object... params ) {
+        try {
+            List<T> list = jdbcTemplate.getJdbcOperations().query( prepare( query ), prepare( params ), getResultSetExtractor( clazz ) );
+            return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
+        }
+        catch( NoSuchMethodException e ) {
+            throw new DataRetrievalFailureException( "Не удалось создать объект " + clazz.getName() + " для маппинга результата запроса СУБД." );
+        }
     }
 
     /**
      * Выполенение запроса с именованными параметрами к СУБД с извлечением из результата всех строк с преобразованием по заданному правилу
-     * @param extractor правило преобразования результата запроса
+     * @param clazz класс для маппинга
      * @param query SQL-запрос
      * @param params именованные параметры запроса
      * @param <T> тип данных, к которому нужно преобразовать строку результата запроса
      * @return список преобразованных данных
      */
-    protected <T> List<T> loadList( ResultSetExtractor<List<T>> extractor, String query, MapSqlParameterSource params ) {
-        List<T> list = jdbcTemplate.query( prepare( query ), prepare( params ), extractor );
-        return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
+    protected <T> List<T> loadListOf( Class<T> clazz, String query, MapSqlParameterSource params ) {
+        try {
+            List<T> list = jdbcTemplate.query( prepare( query ), prepare( params ), getResultSetExtractor( clazz ) );
+            return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
+        }
+        catch( NoSuchMethodException e ) {
+            throw new DataRetrievalFailureException( "Не удалось создать объект " + clazz.getName() + " для маппинга результата запроса СУБД." );
+        }
     }
 
     /**
@@ -208,6 +220,10 @@ public abstract class Repository {
             }
         );
         return preparedParams;
+    }
+
+    private <T> ResultSetExtractor<List<T>> getResultSetExtractor( Class<T> clazz ) throws NoSuchMethodException {
+        return new JpaAnnotationProcessor<>( clazz );
     }
 
     /**

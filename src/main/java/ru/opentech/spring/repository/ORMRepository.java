@@ -1,10 +1,7 @@
 package ru.opentech.spring.repository;
 
-import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import ru.opentech.spring.jdbc.core.JpaAnnotationProcessor;
 
 import java.util.List;
 
@@ -26,12 +23,7 @@ public abstract class ORMRepository<E> extends Repository {
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
     protected <T extends E> List<T> loadList( Class<T> clazz, String query, Object... params ) {
-        try {
-            return super.loadList( getResultSetExtractor( clazz ), query, params );
-        }
-        catch( NoSuchMethodException e ) {
-            throw new DataRetrievalFailureException( "Не удалось создать объект " + clazz.getName() + " для маппинга результата запроса СУБД." );
-        }
+        return super.loadListOf( clazz, query, params );
     }
 
     /**
@@ -42,12 +34,7 @@ public abstract class ORMRepository<E> extends Repository {
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
     protected <T extends E> List<T> loadList( Class<T> clazz, String query, MapSqlParameterSource params ) {
-        try {
-            return super.loadList( getResultSetExtractor( clazz ), query, params );
-        }
-        catch( NoSuchMethodException e ) {
-            throw new DataRetrievalFailureException( "Не удалось создать объект " + clazz.getName() + " для маппинга результата запроса СУБД." );
-        }
+        return super.loadListOf( clazz, query, params );
     }
 
     /**
@@ -70,10 +57,6 @@ public abstract class ORMRepository<E> extends Repository {
      */
     protected <T extends E> T loadObject( Class<T> clazz, String query, MapSqlParameterSource params ) {
         return head( loadList( clazz, query, params ) );
-    }
-
-    private <T extends E> ResultSetExtractor<List<T>> getResultSetExtractor( Class<T> clazz ) throws NoSuchMethodException {
-        return new JpaAnnotationProcessor<>( clazz );
     }
 
 }
