@@ -55,7 +55,7 @@ public abstract class Repository {
      * @return Map, ключом которого является название колонки результата запроса, а значением - содержимое этой колонки
      */
     protected Map<String, Object> loadObject( String query, Object... params ) {
-        return head( loadObjects( prepare( query ), params ) );
+        return head( loadObjects( prepare( query ), prepare( params ) ) );
     }
 
     /**
@@ -65,7 +65,7 @@ public abstract class Repository {
      * @return Map, ключом которого является название колонки результата запроса, а значением - содержимое этой колонки
      */
     protected Map<String, Object> loadObject( String query, MapSqlParameterSource params ) {
-        return head( loadObjects( prepare( query ), params ) );
+        return head( loadObjects( prepare( query ), prepare( params ) ) );
     }
 
     /**
@@ -99,7 +99,7 @@ public abstract class Repository {
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
     protected List<Map<String, Object>> loadObjects( String query, Object... params ) {
-        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( prepare( query ), params ) );
+        return Collections.unmodifiableList( jdbcTemplate.getJdbcOperations().queryForList( prepare( query ), prepare( params ) ) );
     }
 
     /**
@@ -109,7 +109,7 @@ public abstract class Repository {
      * @return список Map, каждый из которых в ключах содержит название колонки результата запроса, а значение - содержимое этой колонки в текущей строке
      */
     protected List<Map<String, Object>> loadObjects( String query, MapSqlParameterSource params ) {
-        return Collections.unmodifiableList( jdbcTemplate.queryForList( prepare( query ), params ) );
+        return Collections.unmodifiableList( jdbcTemplate.queryForList( prepare( query ), prepare( params ) ) );
     }
 
     /**
