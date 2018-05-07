@@ -149,6 +149,28 @@ public abstract class Repository {
     }
 
     /**
+     * Выполенение запроса с безымянными параметрами к СУБД для получения первого кортежа с маппингом результата через JPA
+     * @param clazz класс для маппинга
+     * @param query SQL-запрос
+     * @param params параметры запроса
+     * @return список объектов, с привязанными значениями из результатов SQL запроса
+     */
+    protected <T> T loadObjectOf( Class<T> clazz, String query, Object... params ) {
+        return head( loadListOf( clazz, query, params ) );
+    }
+
+    /**
+     * Выполенение запроса с именованными параметрами к СУБД для получения первого кортежа с маппингом результата через JPA
+     * @param clazz класс для маппинга
+     * @param query SQL-запрос
+     * @param params параметры запроса
+     * @return список объектов, с привязанными значениями из результатов SQL запроса
+     */
+    protected <T> T loadObjectOf( Class<T> clazz, String query, MapSqlParameterSource params ) {
+        return head( loadListOf( clazz, query, params ) );
+    }
+
+    /**
      * Выполнение запроса с безымянными параметрами к СУБД с возвращением кол-ва измененных строк
      * @param query SQL-запрос
      * @param params параметры запроса

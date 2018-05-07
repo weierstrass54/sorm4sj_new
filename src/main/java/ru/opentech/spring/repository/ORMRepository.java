@@ -39,7 +39,7 @@ public abstract class ORMRepository<E> extends Repository {
 
     /**
      * Выполенение запроса с безымянными параметрами к СУБД для получения первого кортежа с маппингом результата через JPA
-     * @param clazz класс для маппинга
+     * @param clazz класс для маппинга, который наследует базовый класс ORMRepository
      * @param query SQL-запрос
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
@@ -50,7 +50,7 @@ public abstract class ORMRepository<E> extends Repository {
 
     /**
      * Выполенение запроса с именованными параметрами к СУБД для получения первого кортежа с маппингом результата через JPA
-     * @param clazz класс для маппинга
+     * @param clazz класс для маппинга, который наследует базовый класс ORMRepository
      * @param query SQL-запрос
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
