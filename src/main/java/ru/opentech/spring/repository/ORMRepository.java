@@ -10,16 +10,16 @@ import ru.opentech.spring.jdbc.core.JpaAnnotationProcessor;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
-public abstract class Repository {
+public abstract class ORMRepository {
 
     private final boolean attachCallerSrc;
     protected final NamedParameterJdbcTemplate jdbcTemplate;
 
-    protected Repository( NamedParameterJdbcTemplate jdbcTemplate ) {
+    protected ORMRepository( NamedParameterJdbcTemplate jdbcTemplate ) {
         this( jdbcTemplate, false );
     }
 
-    protected Repository( NamedParameterJdbcTemplate jdbcTemplate, boolean attachCallerSrc ) {
+    protected ORMRepository( NamedParameterJdbcTemplate jdbcTemplate, boolean attachCallerSrc ) {
         this.jdbcTemplate = jdbcTemplate;
         this.attachCallerSrc = attachCallerSrc;
     }
