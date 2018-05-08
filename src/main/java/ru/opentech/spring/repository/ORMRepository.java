@@ -120,7 +120,7 @@ public abstract class ORMRepository {
      * @param <T> тип данных, к которому нужно преобразовать строку результата запроса
      * @return список преобразованных данных
      */
-    protected <T> List<T> loadListOf( Class<T> clazz, String query, Object... params ) {
+    protected <T> List<T> loadList( Class<T> clazz, String query, Object... params ) {
         try {
             List<T> list = jdbcTemplate.getJdbcOperations().query( prepare( query ), prepare( params ), getResultSetExtractor( clazz ) );
             return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
@@ -138,7 +138,7 @@ public abstract class ORMRepository {
      * @param <T> тип данных, к которому нужно преобразовать строку результата запроса
      * @return список преобразованных данных
      */
-    protected <T> List<T> loadListOf( Class<T> clazz, String query, MapSqlParameterSource params ) {
+    protected <T> List<T> loadList( Class<T> clazz, String query, MapSqlParameterSource params ) {
         try {
             List<T> list = jdbcTemplate.query( prepare( query ), prepare( params ), getResultSetExtractor( clazz ) );
             return list != null ? Collections.unmodifiableList( list ) : new ArrayList<>();
@@ -155,8 +155,8 @@ public abstract class ORMRepository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected <T> T loadObjectOf( Class<T> clazz, String query, Object... params ) {
-        return head( loadListOf( clazz, query, params ) );
+    protected <T> T loadObject( Class<T> clazz, String query, Object... params ) {
+        return head( loadList( clazz, query, params ) );
     }
 
     /**
@@ -166,8 +166,8 @@ public abstract class ORMRepository {
      * @param params параметры запроса
      * @return список объектов, с привязанными значениями из результатов SQL запроса
      */
-    protected <T> T loadObjectOf( Class<T> clazz, String query, MapSqlParameterSource params ) {
-        return head( loadListOf( clazz, query, params ) );
+    protected <T> T loadObject( Class<T> clazz, String query, MapSqlParameterSource params ) {
+        return head( loadList( clazz, query, params ) );
     }
 
     /**
