@@ -11,6 +11,22 @@
 * для получения простых данных или выполнения DDL
 * для маппинга результата в объекты Java
 
+## Зависимости gradle
+```groovy
+repositories {
+    maven {
+        url('http://nexus.opentech.local/repository/maven-releases/')
+    }
+}
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-jdbc",
+            "ru.opentech:sorm4sj:1.0.0"
+}
+
+```
+
+
 ## Примеры использования ORMRepository
 ### Инициализация
 ```java
@@ -113,12 +129,31 @@ class SomeRepository extends ORMRepository {
         return super.loadScalar( 
             Integer.class, 
             "SELECT COUNT(*) FROM table WHERE id = :id AND name = :name",
-            id, name
+            params
         );
     }
     
 } 
 ```
+
+### Использование массивов в качестве параметров запроса
+Любой параметр, реализующий интерфейс **Iterable&lt;T&gt;** будет преобразован в массив значений **T** и передан в драйвер PostgreSQL.
+
+**Примечание** - для передачи массивов в виде параметра запроса необходимо, чтобы драйвер для работы с PostgreSQL
+поддерживал передачу массивов!
+
+```java
+@Repository
+class SomeRepository extends ORMRepository {
+    
+    public int getCount( List<Integer> ids ) {
+        return super.loadScalar( Integer.class, "SELECT COUNT(*) FROM table WHERE id = ANY( ? )", ids );
+    }
+    
+} 
+```
+
+
 
 ### Получение строки с маппингом
 ```java
